@@ -14,26 +14,45 @@ fetch(aepp)
 })
 // Subscribe from postMessages from page
 window.addEventListener("message", ({data}) => {
-    console.log(data)
-    return;
     let method = "pageMessage";
     if(typeof data.method != "undefined") {
         method = data.method
     }
-    // Handle message from page and redirect to background script
+    if(data.method == "ready") return
     if(!data.hasOwnProperty("resolve")) {
-        sendToBackground(method,data).then(res => {
-            if (method == 'aeppMessage') {
-                res.resolve = true
-                res.method = method
-                window.postMessage(res, "*")
-            }
+        postMessageToBackground(data).then(res => {
+            // console.log(data)
+            // console.log(res)
         })
     }
+
+    
+    // if(!data.hasOwnProperty("resolve")) {
+    //     sendToBackground(method,data).then(res => {
+    //         if (method == 'aeppMessage') {
+    //             res.resolve = true
+    //             res.method = method
+    //             window.postMessage(res, "*")
+    //         }
+    //     })
+    // }
 }, false)
 
+function postMessageToBackground(data) {
+    return new Promise((resolve,reject) => {
+        browser.runtime.sendMessage({
+            data
+        }).then((res) => {
+            resolve(res)
+        })
+    })
+}
+
+
 // Handle message from background and redirect to page
-browser.runtime.onMessage.addListener(({ data, method }, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    window.postMessage(msg, '*')
+    let { data } = msg
     if(data.method == 'phishingCheck') {
         if(data.blocked) {
             redirectToWarning(data.params.hostname,data.params.href,data.extUrl)

@@ -38,7 +38,7 @@ const extractHostName = (url) => {
     }
 
     //find & remove port number
-    hostname = hostname.split(':')[0];
+    // hostname = hostname.split(':')[0];
     //find & remove "?"
     hostname = hostname.split('?')[0];
 
@@ -111,6 +111,56 @@ const checkAeppConnected = (host) => {
     })
 }
 
+const getAeppAccountPermission = (host, account) => {
+    return new Promise((resolve, reject) => {
+        browser.storage.sync.get('connectedAepps').then((aepps) => {
+            if(!aepps.hasOwnProperty('connectedAepps')) {
+                return resolve(false)
+            }
+            console.log("vliza")
+            if(aepps.hasOwnProperty('connectedAepps') && aepps.connectedAepps.hasOwnProperty('list')) {
+                let list = aepps.connectedAepps.list
+                console.log(list)
+                if(list.find(ae => ae.host == host && ae.accounts.includes(account))) {
+                    return resolve(true)
+                }
+                return resolve(false)
+            }
+    
+            return resolve(false)
+        })
+    })
+}
+
+const setPermissionForAccount = (host, account) => {
+    return new Promise((resolve, reject) => {
+        browser.storage.sync.get('connectedAepps').then((aepps) => {
+
+            let list = []
+            if(aepps.hasOwnProperty('connectedAepps') && aepps.connectedAepps.hasOwnProperty('list')) {
+                list = aepps.connectedAepps.list
+            }
+            if (list.length) {
+                let hst = list.find(h => h.host == host)
+                let index = list.findIndex(h => h.host == host)
+                if(typeof hst == "undefined") return 
+                if(hst.accounts.includes(account)) return
+
+                list[index].accounts = [...hst.accounts, account]
+
+            } else {
+                list.push({ host, accounts: [account] })
+            }   
+
+            console.log(list)
+            // return;
+            browser.storage.sync.set({connectedAepps: { list }}).then(() => {
+                console.log("save")
+                resolve()
+            })
+        })
+    })
+}
 
 const redirectAfterLogin = (ctx) => {
   browser.storage.sync.get('showAeppPopup').then((aepp) => {
@@ -377,7 +427,9 @@ export {
     parseFromStorage,
     escapeCallParams,
     addRejectedToken,
-    contractCall
+    contractCall,
+    getAeppAccountPermission,
+    setPermissionForAccount
 }
 
 
