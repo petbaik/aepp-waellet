@@ -6,16 +6,16 @@ if(typeof navigator.clipboard == 'undefined') {
 } else {
     sendToBackground('phishingCheck',{ hostname:extractHostName(window.location.href), href:window.location.href })    
 }
+
 let aepp = browser.runtime.getURL("aepp.js")
 fetch(aepp) 
 .then(res => res.text())
 .then(res => {
-    // injectScript(res)
+    injectScript(res)
 })
+
 // Subscribe from postMessages from page
 window.addEventListener("message", ({data}) => {
-    console.log(data)
-    return;
     let method = "pageMessage";
     if(typeof data.method != "undefined") {
         method = data.method
@@ -32,14 +32,27 @@ window.addEventListener("message", ({data}) => {
     }
 }, false)
 
+
 // Handle message from background and redirect to page
-browser.runtime.onMessage.addListener(({ data, method }, sender, sendResponse) => {
-    if(data.method == 'phishingCheck') {
-        if(data.blocked) {
-            redirectToWarning(data.params.hostname,data.params.href,data.extUrl)
-        }
+// browser.runtime.onMessage.addListener(({ data, method }, sender, sendResponse) => {
+//     if(data.method == 'phishingCheck') {
+//         if(data.blocked) {
+//             redirectToWarning(data.params.hostname,data.params.href,data.extUrl)
+//         }
+//     }
+// })
+
+const readyStateCheckInterval = setInterval(function () {
+    if (document.readyState === "complete") {
+        clearInterval(readyStateCheckInterval)
+
+        // Handle message from background and redirect to page
+        chrome.runtime.onMessage.addListener(({ data }, sender) => {
+            window.postMessage(data, '*')
+        })
     }
-})
+}, 10)
+
 
 const redirectToWarning = (hostname,href,extUrl = '') => {
     window.stop()
@@ -96,4 +109,10 @@ function signResponse({value, sdkId, tx}) {
     sendToBackground('txSign', {value, sdkId, tx})
 }
 
+chrome.runtime.onConnect.addListener(async (port) => {
+    console.log(port)
+})
 
+chrome.runtime.sendMessage({
+    jsonrpc: "2.0",
+})

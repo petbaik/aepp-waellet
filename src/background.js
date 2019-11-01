@@ -5,8 +5,9 @@ import Notification from './notifications';
 
 
 import MemoryAccount from '@aeternity/aepp-sdk/es/account/memory'
-import Wallet from '@aeternity/aepp-sdk/es/ae/wallet'
-// import BrowserRuntimeConnection from '@aeternity/aepp-sdk/es/utils/aepp-wallet-communication/wallet-connection/browser-runtime'
+import { RpcWallet } from '@aeternity/aepp-sdk/es/ae/wallet'
+import BrowserRuntimeConnection from '@aeternity/aepp-sdk/es/utils/aepp-wallet-communication/wallet-connection/browser-runtime'
+
 
 
 
@@ -258,6 +259,7 @@ const postToContent = (data, tabId) => {
 const controller = new WalletContorller()
 
 browser.runtime.onConnect.addListener( ( port ) => {
+    console.log(port)
     let extensionUrl = 'chrome-extension'
     if(detectBrowser() == 'Firefox') {
         extensionUrl = 'moz-extension'
@@ -277,5 +279,67 @@ const notification = new Notification();
 /** 
  * AEX-2
  */
+const postMessageToContent = (data) => {
+    chrome.tabs.query({}, function (tabs) { // TODO think about direct communication with tab
+        const message = { method: 'pageMessage', data };
+        tabs.forEach(({ id }) => chrome.tabs.sendMessage(id, message)) // Send message to all tabs
+    });
+}
+
+const account =  MemoryAccount({
+    keypair: {
+        secretKey: "e22d7b32439e97881683bbc8c2df5abff99621d72bbf150e31a03d8b688998dcd6a8067dc1ffe4fe3f6203eb8e0734c95752f5e668e29be4e32337f94f73bf38",
+        publicKey: "ak_2dY7HSsxH3yGL5j7mNvYYjFGTZwqtLNyoLSSaymn1wLKFSneeQ"
+    }
+})
+
+const accounts = [
+    account
+]
+
+const NODE_URL = 'https://sdk-testnet.aepps.com'
+const NODE_INTERNAL_URL = 'https://sdk-testnet.aepps.com'
+const COMPILER_URL = 'https://compiler.aepps.com'
 
 
+// Init extension stamp from sdk
+RpcWallet({
+    url: NODE_URL,
+    internalUrl: NODE_INTERNAL_URL,
+    compilerUrl: COMPILER_URL,
+    name: 'Waellet',
+    // By default `ExtesionProvider` use first account as default account. You can change active account using `selectAccount (address)` function
+    accounts,
+    // Hook for sdk registration
+    onConnection (aepp, action) {
+        if (confirm(`Client ${aepp.info.name} with id ${aepp.id} want to connect`)) {
+            action.accept()
+        }
+    },
+    onDisconnect (masg, client) {
+      client.disconnect()
+    },
+    onSubscription (aepp, action) {
+        if (confirm(`Aepp ${aepp.info.name} with id ${aepp.id} want to subscribe for accounts`)) {
+            action.accept()
+        } else { action.deny() }
+    },
+    onSign (aepp, action) {
+        if (confirm(`Aepp ${aepp.info.name} with id ${aepp.id} want to sign tx ${action.params.tx}`)) {
+            action.accept()
+        } else { action.deny() }
+    }
+}).then(wallet => {
+    // Subscribe for runtime connection
+    chrome.runtime.onConnectExternal.addListener(async (port) => {    
+        // create Connection
+        const connection = await BrowserRuntimeConnection({ connectionInfo: { id: port.sender.frameId }, port })
+        // add new aepp to wallet
+        wallet.addRpcClient(connection)
+    })
+    // Share wallet info with extensionId to the page
+    // Send wallet connection info to Aepp throug content script
+    setInterval(() => wallet.shareWalletInfo(postMessageToContent), 5000)
+}).catch(err => {
+    console.error(err)
+})
