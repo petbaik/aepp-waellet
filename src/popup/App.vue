@@ -227,6 +227,8 @@ export default {
       });
       let background = await start(browser)
       this.$store.commit( 'SET_BACKGROUND', background )
+
+      
       
       //init SDK
       this.checkSDKReady = setInterval(() => {
@@ -273,6 +275,7 @@ export default {
     changeAccount (index,subaccount) {
       this.$store.commit('SET_ACTIVE_TOKEN',0)
       browser.storage.sync.set({activeAccount: index}).then(() => {
+        postMesssage(this.background, { type: 'changeAccount' , payload: subaccount.publicKey } )
         this.$store.commit('SET_ACTIVE_ACCOUNT', {publicKey:subaccount.publicKey,index:index});
         this.initSDK();
         this.dropdown.account = false;
@@ -314,6 +317,7 @@ export default {
     switchNetwork (network) {
       this.dropdown.network = false;
       this.$store.dispatch('switchNetwork', network).then(() => {
+        postMesssage(this.background, { type: 'switchNetwork' , payload: network } )
         this.initSDK();
         this.$store.dispatch('updateBalance');
         let transactions = this.$store.dispatch('getTransactionsByPublicKey',{publicKey:this.account.publicKey,limit:3});
