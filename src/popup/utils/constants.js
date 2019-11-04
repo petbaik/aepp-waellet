@@ -79,7 +79,7 @@ export const networks = {
     networkId: 'ae_uat',
     middlewareUrl: 'https://testnet.mdw.aepps.com/',
     explorerUrl: 'https://testnet.explorer.aepps.com',
-    compilerUrl: 'https://latest.compiler.aepps.com',
+    compilerUrl: 'https://compiler.aepps.com',
     tokenRegistry: 'ct_Dnwribmd21YrxSQnqXCB5vTFPrgYJx2eg2TrbLvbdyEbTMejw'
   },
   Mainnet: {

@@ -33,7 +33,7 @@ setInterval(() => {
     browser.windows.getAll({}).then((wins) => {
         if(wins.length == 0) {
             sessionStorage.removeItem("phishing_urls");
-            browser.storage.sync.remove('isLogged')
+            // browser.storage.sync.remove('isLogged')
             browser.storage.sync.remove('activeAccount')
         }
     });
