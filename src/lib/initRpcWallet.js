@@ -47,8 +47,12 @@ export default async (connection, walletController) => {
                 
                 console.log(internalUrl)
                 const node = await Node({ url:internalUrl, internalUrl: internalUrl })
-                console.log(node)
-                await sdk.addNode(payload, node, true)
+                try {
+                    await sdk.addNode(payload, node, true)
+                } catch(e) {
+
+                }
+                
                 console.log(sdk)
                 sdk.selectNode(internalUrl)
                 // createWallet()
@@ -105,8 +109,8 @@ export default async (connection, walletController) => {
                     })
                 }
             })
-            
-            chrome.runtime.onConnectExternal.addListener(async (port) => {    
+            console.log("here")
+            chrome.runtime.onConnectExternal.addListener(async (port) => { 
                 // create Connection
                 const connection = await BrowserRuntimeConnection({ connectionInfo: { id: port.sender.frameId }, port })
                 // add new aepp to wallet

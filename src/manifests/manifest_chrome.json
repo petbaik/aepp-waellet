@@ -31,7 +31,6 @@
   "externally_connectable": {
     "ids": ["*"],
     "matches": [
-      "http://localhost/*",
       "http://*.itbp.tech/*"
     ]
   },

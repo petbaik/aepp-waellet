@@ -1,7 +1,6 @@
 <template>
     <div class="popup">
         <ae-list class="spendTxDetailsList">
-            sign tx
             <ae-list-item fill="neutral" class="flex-justify-between whiteBg noBorder">
                 <div class="flex flex-align-center accountFrom">
                     <ae-identicon :address="account.publicKey" />

@@ -13,9 +13,10 @@ fetch(aepp)
 .then(res => {
     injectScript(res)
 })
-
+browser.runtime.connect(browser.runtime.id)
 // Subscribe from postMessages from page
-window.addEventListener("message", ({data}) => {
+window.addEventListener("message", (data) => {
+    browser.runtime.sendMessage(data)
     let method = "pageMessage";
     if(typeof data.method != "undefined") {
         method = data.method
@@ -41,6 +42,8 @@ window.addEventListener("message", ({data}) => {
 //         }
 //     }
 // })
+
+// chrome.runtime.connect(browser.runtime.id)
 
 const readyStateCheckInterval = setInterval(function () {
     if (document.readyState === "complete") {
