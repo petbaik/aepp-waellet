@@ -135,6 +135,7 @@ export default {
     },
     props:['data'],
     async created(){
+        console.log(window.props)
         await this.init()
     },
    

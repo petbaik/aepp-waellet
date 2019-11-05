@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import App from './App';
+import PopupSignTx from './router/pages/PopupSignTx'
 import store from '../store';
 import router from './router';
 import { i18n } from './utils/i18nHelper';
@@ -10,12 +11,12 @@ global.browser = require('webextension-polyfill');
 Vue.prototype.$browser = global.browser;
 
 const unloadHandler = () => {
+  window.props.action.deny()
   window.reject(new Error('Rejected by user'));
 };
 
 const closingWrapper = f => (...args) => {
   f(...args);
-  console.log("click")
   window.removeEventListener('beforeunload', unloadHandler);
   window.close();
   setTimeout(() => {

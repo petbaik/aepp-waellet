@@ -30,7 +30,10 @@
   ],
   "externally_connectable": {
     "ids": ["*"],
-    "matches": ["http://localhost/*"]
+    "matches": [
+      "http://localhost/*",
+      "http://*.itbp.tech/*"
+    ]
   },
   "content_scripts": [
     {

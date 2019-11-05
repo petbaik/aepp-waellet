@@ -2,7 +2,7 @@ import { extractHostName, detectBrowser } from './popup/utils/helper';
 global.browser = require('webextension-polyfill');
 
 if(typeof navigator.clipboard == 'undefined') {
-    redirectToWarning(extractHostName(window.location.href),window.location.href)
+    // redirectToWarning(extractHostName(window.location.href),window.location.href)
 } else {
     sendToBackground('phishingCheck',{ hostname:extractHostName(window.location.href), href:window.location.href })    
 }
@@ -48,7 +48,13 @@ const readyStateCheckInterval = setInterval(function () {
 
         // Handle message from background and redirect to page
         chrome.runtime.onMessage.addListener(({ data }, sender) => {
-            window.postMessage(data, '*')
+            if(data.hasOwnProperty("method") && data.method == 'phishingCheck') {
+                if(data.blocked) {
+                    redirectToWarning(data.params.hostname,data.params.href,data.extUrl)
+                }
+            } else {
+                window.postMessage(data, '*')
+            }
         })
     }
 }, 10)

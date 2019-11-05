@@ -121,12 +121,12 @@ const redirectAfterLogin = (ctx) => {
                 ctx.$store.commit('SET_AEPP_POPUP',true)
                 console.log(window.name)
                 console.log("here")
-                if(window.hasOwnProperty("name") && window.name == "popup") {
+                if(window.hasOwnProperty("name") && window.name.includes("popup")) {
                     console.log(window.props.type)
                     if(window.props.type == "connectConfirm") {
                         ctx.$router.push('/connect-confirm');
                     } else if(window.props.type == "sign") {
-                        ctx.$router.push('/sign');
+                        ctx.$router.push('/popup-sign-tx');
                     }
                 }
 
@@ -393,7 +393,8 @@ const setPermissionForAccount = (host, account) => {
             if(aepps.hasOwnProperty('connectedAepps') && aepps.connectedAepps.hasOwnProperty('list')) {
                 list = aepps.connectedAepps.list
             }
-            if (list.length) {
+            
+            if (list.length && typeof list.find(l => l.host == host) != "undefined") {
                 let hst = list.find(h => h.host == host)
                 let index = list.findIndex(h => h.host == host)
                 if(typeof hst == "undefined") {

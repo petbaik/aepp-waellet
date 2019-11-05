@@ -53,15 +53,17 @@ export default {
     },
     methods: {
         cancel() {
-           this.data.action.deny()
-           this.data.reject()
+            if(Object.keys( this.data.action).length) {
+                this.data.action.deny()
+            }
+           
+            this.data.reject()
         },
         async connect() {
-            console.log(this.data.host)
             await setPermissionForAccount(this.data.host, this.account.publicKey)
-            console.log("accept")
-            this.data.action.accept()
-            console.log("resolve")
+            if(Object.keys( this.data.action).length) {
+                this.data.action.accept()
+            }
             this.data.resolve()
         }
     },

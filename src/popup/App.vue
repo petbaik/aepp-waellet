@@ -229,26 +229,29 @@ export default {
       this.$store.commit( 'SET_BACKGROUND', background )
 
       
-      
-      //init SDK
-      this.checkSDKReady = setInterval(() => {
-        if(this.isLoggedIn && this.sdk == null) {
-          
-          this.initLedger()
-          this.initSDK()
-          
-          this.pollData()
-          clearInterval(this.checkSDKReady)
-        }
-      },500)
+      if(!process.env.RUNNING_IN_POPUP) {
+        //init SDK
+        this.checkSDKReady = setInterval(() => {
+          if(this.isLoggedIn && this.sdk == null) {
+            
+            this.initLedger()
+            this.initSDK()
+            
+            this.pollData()
+            clearInterval(this.checkSDKReady)
+          }
+        },500)
 
-      setTimeout(() => {
-        if(this.isLoggedIn) {
-          this.pollData()
-        }else {
-          this.hideLoader()
-        }
-      },500)
+        setTimeout(() => {
+          if(this.isLoggedIn) {
+            this.pollData()
+          }else {
+            this.hideLoader()
+          }
+        },500)
+      } else {
+        this.hideLoader()
+      }
 
       this.checkPendingTx()
       window.addEventListener('resize', () => {
