@@ -18,10 +18,10 @@ export default async (connection, walletController) => {
     let accountKeyPairs = []
     let sdk 
 
-    let seed = {
-        seed:stringifyForStorage("3c9ed46b5da9b5686abcbd85870adc66c1706c62d2000857820870b960593a6dcb9734abe47a122a2917462ede5994a0a7eff304cab6aeb66d6c1ad021b6eb6c")
-    }
-    await walletController.generateWallet(seed)
+    // let seed = {
+    //     seed:stringifyForStorage("3c9ed46b5da9b5686abcbd85870adc66c1706c62d2000857820870b960593a6dcb9734abe47a122a2917462ede5994a0a7eff304cab6aeb66d6c1ad021b6eb6c")
+    // }
+    // await walletController.generateWallet(seed)
 
     connection(async ({ hdwallet, port, type, payload, uuid }) => {
         if(!hdwallet) {
