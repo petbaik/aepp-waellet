@@ -16,7 +16,7 @@ fetch(aepp)
 browser.runtime.connect(browser.runtime.id)
 // Subscribe from postMessages from page
 window.addEventListener("message", (data) => {
-    browser.runtime.sendMessage(data)
+    // browser.runtime.sendMessage(data)
     let method = "pageMessage";
     if(typeof data.method != "undefined") {
         method = data.method
