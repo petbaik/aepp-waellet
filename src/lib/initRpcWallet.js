@@ -5,6 +5,7 @@ import MemoryAccount from '@aeternity/aepp-sdk/es/account/memory'
 import { RpcWallet } from '@aeternity/aepp-sdk/es/ae/wallet'
 import BrowserRuntimeConnection from '@aeternity/aepp-sdk/es/utils/aepp-wallet-communication/wallet-connection/browser-runtime'
 import Node from '@aeternity/aepp-sdk/es/node'
+global.browser = require('webextension-polyfill');
 
 export default async (connection, walletController) => {
 
@@ -110,7 +111,7 @@ export default async (connection, walletController) => {
                 }
             })
             console.log("here")
-            chrome.runtime.onConnectExternal.addListener(async (port) => { 
+            browser.runtime.onConnectExternal.addListener(async (port) => { 
                 // create Connection
                 const connection = await BrowserRuntimeConnection({ connectionInfo: { id: port.sender.frameId }, port })
                 // add new aepp to wallet
@@ -180,12 +181,12 @@ export default async (connection, walletController) => {
             popupWindow.window.props = { type, resolve, reject, action, host: extractHostName(url), icons, name, protocol };
         });
     }
-
+  
 
     const postMessageToContent = (data) => {
-        chrome.tabs.query({}, function (tabs) { // TODO think about direct communication with tab
+        browser.tabs.query({}).then((tabs) => { // TODO think about direct communication with tab
             const message = { method: 'pageMessage', data };
-            tabs.forEach(({ id }) => chrome.tabs.sendMessage(id, message)) // Send message to all tabs
+            tabs.forEach(({ id }) => browser.tabs.sendMessage(id, message)) // Send message to all tabs
         });
     }
 
