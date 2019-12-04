@@ -6,15 +6,13 @@ if(typeof navigator.clipboard == 'undefined') {
 } else {
     sendToBackground('phishingCheck',{ hostname:extractHostName(window.location.href), href:window.location.href })    
 }
-
 let aepp = browser.runtime.getURL("aepp.js")
 fetch(aepp) 
 .then(res => res.text())
 .then(res => {
-    injectScript(res)
+    // injectScript(res)
 })
-browser.runtime.connect(browser.runtime.id)
-// Subscribe from postMessages from page
+
 window.addEventListener("message", (data) => {
     // browser.runtime.sendMessage(data)
     let method = "pageMessage";
@@ -33,22 +31,9 @@ window.addEventListener("message", (data) => {
     }
 }, false)
 
-
-// Handle message from background and redirect to page
-// browser.runtime.onMessage.addListener(({ data, method }, sender, sendResponse) => {
-//     if(data.method == 'phishingCheck') {
-//         if(data.blocked) {
-//             redirectToWarning(data.params.hostname,data.params.href,data.extUrl)
-//         }
-//     }
-// })
-
-// chrome.runtime.connect(browser.runtime.id)
-
 const readyStateCheckInterval = setInterval(function () {
     if (document.readyState === "complete") {
         clearInterval(readyStateCheckInterval)
-
         // Handle message from background and redirect to page
         chrome.runtime.onMessage.addListener(({ data }, sender) => {
             if(data.hasOwnProperty("method") && data.method == 'phishingCheck') {
@@ -103,25 +88,3 @@ function sendToBackground(method, params) {
         })
     })
 }
-
-// Render
-function render(data) {
-    // @TODO create list with sdks and his transaction with ability to accept/decline signing
-}
-
-function clickSign({target, value}) {
-    const [sdkId, tx] = target.id.split['-'];
-    signResponse({value, sdkId, tx})
-}
-
-function signResponse({value, sdkId, tx}) {
-    sendToBackground('txSign', {value, sdkId, tx})
-}
-
-chrome.runtime.onConnect.addListener(async (port) => {
-    console.log(port)
-})
-
-chrome.runtime.sendMessage({
-    jsonrpc: "2.0",
-})

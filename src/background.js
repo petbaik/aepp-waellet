@@ -301,5 +301,3 @@ connectToExtPopup(({ hdwallet, port, type, payload, uuid }) => {
  */
 
 initRpcwallet(connectToExtPopup, controller)
-
-

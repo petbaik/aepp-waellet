@@ -3,7 +3,10 @@ import { stringifyForStorage, parseFromStorage, extractHostName, getAeppAccountP
 import { getAccounts } from '../popup/utils/storage'
 import MemoryAccount from '@aeternity/aepp-sdk/es/account/memory'
 import { RpcWallet } from '@aeternity/aepp-sdk/es/ae/wallet'
-import BrowserRuntimeConnection from '@aeternity/aepp-sdk/es/utils/aepp-wallet-communication/wallet-connection/browser-runtime'
+import BrowserRuntimeConnection
+  from '@aeternity/aepp-sdk/es/utils/aepp-wallet-communication/wallet-connection/browser-runtime'
+import { detectBrowser } from '../popup/utils/helper'
+
 import Node from '@aeternity/aepp-sdk/es/node'
 global.browser = require('webextension-polyfill');
 
@@ -36,49 +39,36 @@ export default async (connection, walletController) => {
                 let newAccount =  MemoryAccount({
                     keypair: parseFromStorage(await walletController.getKeypair({ activeAccount: payload.idx, account }))
                 })
-                console.log(sdk)
-                console.log(payload.address)
                 sdk.addAccount(newAccount, { select: true })
                 activeAccount = payload.address
             } else if( type == "switchNetwork" ) {
                 network = payload
                 compiler = networks[network].compilerUrl
                 internalUrl = networks[network].internalUrl
-                console.log("change")
-                
-                console.log(internalUrl)
                 const node = await Node({ url:internalUrl, internalUrl: internalUrl })
                 try {
                     await sdk.addNode(payload, node, true)
                 } catch(e) {
-
+                    console.log(e)
                 }
-                
-                console.log(sdk)
                 sdk.selectNode(internalUrl)
-                // createWallet()
             }
         }
     })
 
 
     const createWallet = async () => {
-        // Init extension stamp from sdk
         accountKeyPairs = await Promise.all(subaccounts.map(async (a, index) => (
             parseFromStorage(await walletController.getKeypair({ activeAccount: index, account: a}))
         )))
         
         let activeIdx = await browser.storage.sync.get('activeAccount') 
         
-        
-        
         accounts = accountKeyPairs.map((a) => {
             return MemoryAccount({
                 keypair: a
             })
         })
-
-        console.log(internalUrl)
 
         try {
             sdk  = await RpcWallet({
@@ -87,34 +77,34 @@ export default async (connection, walletController) => {
                 compilerUrl: compiler,
                 name: 'Waellet',
                 accounts,
-                // Hook for sdk registration
                 async onConnection (aepp, action) {
                     checkAeppPermissions(aepp, action, "connection")
                 },
                 onDisconnect (masg, client) {
-                    // alert(masg)
-                    console.log(masg)
-                  client.disconnect()
+                    client.disconnect()
                 },
                 async onSubscription (aepp, action) {
                     checkAeppPermissions(aepp, action, "subscription")
                 },
                 async onSign (aepp, action) {
-                    console.log("sign", aepp)
-                    console.log("sign",action)
                     checkAeppPermissions(aepp, action, "sign", () => {
                         setTimeout(() => {
                             showConnectionPopup({ aepp, action, type: "sign" })
                         }, 2000)
                         
                     })
+                },
+                onAskAccounts (aepp, { accept, deny }) {
+                    if (confirm(`Client ${aepp.info.name} with id ${aepp.id} want to get accounts`)) {
+                      accept()
+                    } else {
+                      deny()
+                    }
                 }
             })
-            console.log("here")
+            
             browser.runtime.onConnectExternal.addListener(async (port) => { 
-                // create Connection
                 const connection = await BrowserRuntimeConnection({ connectionInfo: { id: port.sender.frameId }, port })
-                // add new aepp to wallet
                 sdk.addRpcClient(connection)
             })
 
@@ -127,33 +117,24 @@ export default async (connection, walletController) => {
                 activeAccount = accountKeyPairs[0].publicKey
             }
 
-            console.log(sdk)
-            // sdk.shareWalletInfo(postMessageToContent)
             setInterval(() => sdk.shareWalletInfo(postMessageToContent), 5000)
 
         } catch(e) {
             console.error(e)
         }
        
+        console.log(sdk)
         return sdk
     }
 
     const checkAeppPermissions = async (aepp, action, caller, cb ) => {
         let { connection: { port: {  sender: { url } } } } = aepp
-        
-        console.log("active account", activeAccount)
         let isConnected = await getAeppAccountPermission(extractHostName(url), activeAccount)
-        
-        console.log("check perm", aepp)
-        console.log("check perm", action)
-        console.log("is connected" , isConnected)
+
         if(!isConnected) {
             try {
                 let a = caller == "connection" ? action : {}
-                console.log(a)
                 let res = await showConnectionPopup({ action: a, aepp, type: "connectConfirm" })
-                console.log(cb)
-                console.log(res)
                 if(typeof cb != "undefined") {
                     cb()
                 }
@@ -170,9 +151,6 @@ export default async (connection, walletController) => {
     }
 
     const showConnectionPopup = ({ action, aepp, type = "connectConfirm" }) => {
-        console.log("connection popup", action)
-        console.log("connection popup", aepp)
-        console.log("connection popup type", type)
         const popupWindow = window.open(`/popup/popup.html?t=${action.id}`, `popup_id_${action.id}`, 'width=420,height=680', false);
         if (!popupWindow) action.deny()
         let { connection: { port: {  sender: { url } } }, info: { icons, name} } = aepp
@@ -184,10 +162,19 @@ export default async (connection, walletController) => {
   
 
     const postMessageToContent = (data) => {
-        browser.tabs.query({}).then((tabs) => { // TODO think about direct communication with tab
-            const message = { method: 'pageMessage', data };
-            tabs.forEach(({ id }) => browser.tabs.sendMessage(id, message)) // Send message to all tabs
-        });
+        console.log(detectBrowser())
+        if(detectBrowser() == 'Firefox') {
+            browser.tabs.query({}).then( tabs => { 
+                const message = { method: 'pageMessage', data };
+                tabs.forEach(({ id }) => browser.tabs.sendMessage(id, message))
+            });
+        } else {
+            chrome.tabs.query({}, function(tabs) { 
+                const message = { method: 'pageMessage', data };
+                tabs.forEach(({ id }) => chrome.tabs.sendMessage(id, message))
+            });
+        }
+        
     }
 
     const recreateWallet = async () => {
@@ -196,7 +183,6 @@ export default async (connection, walletController) => {
 
     let created = false
     let lastNetwork
-    // recreateWallet()
     let createInterval = setInterval(async () => {
         if(walletController.isLoggedIn()) {
             if(!created) {

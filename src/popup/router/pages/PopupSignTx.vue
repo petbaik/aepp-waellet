@@ -77,12 +77,12 @@
                     <!-- <div class="fiat-rate" v-if="!txObject.token">${{ convertCurrency(usdRate,totalSpend) }}</div> -->
                 </div>
             </ae-list-item> 
-            <ae-list-item v-if="txType == 'contractCreateTx'" fill="neutral" class="flex-justify-between whiteBg flex-align-center " >
+            <ae-list-item v-if="txType == 'contractCreateTx'" fill="neutral" class="flex-justify-between whiteBg flex-align-center flex-direction-column flex-align-start" >
                 <div class="tx-label ">
                     {{ $t('pages.signTransaction.compiledCode') }}
                 </div>
-                <div>
-                    <strong>{{ txObject.compiledCode }}</strong>
+                <div class="text-left ">
+                    <strong>{{ txObject.code }}</strong>
                 </div>
             </ae-list-item>
             <ae-list-item v-if="txType == 'contractCreateTx'" fill="neutral" class="flex-justify-between whiteBg flex-align-center " >
@@ -118,6 +118,7 @@ import { Wallet, MemoryAccount } from '@aeternity/aepp-sdk/es'
 
 import BigNumber from 'bignumber.js';
 import { clearInterval, clearTimeout  } from 'timers';
+import { TxBuilder } from '@aeternity/aepp-sdk/es';
 
 export default {
     data() {
@@ -128,7 +129,8 @@ export default {
             alertMsg:"",
             loading:false,
             loaderType:'transparent',
-            loaderContent:""
+            loaderContent:"",
+            unpackedTx: null
         }
     },
     async created() {
@@ -136,11 +138,13 @@ export default {
         // console.log(userAccount)
         // this.$store.commit('UPDATE_ACCOUNT', userAccount);
         // console.log(userAccount)
+        console.log(this.props)
+        this.unpackedTx = TxBuilder.unpackTx(this.props.action.params.tx)
     },
     computed: {
         ...mapGetters(['account','activeAccountName','balance','network','current','wallet','activeAccount', 'sdk', 'tokens', 'tokenBalance','isLedger','popup', 'tokenRegistry']),
         txType() {  
-            return this.props.action.meta.txType
+            return this.unpackedTx.txType
         },
         isAddressShow() {
             if(this.txType == 'contractCreateTx' || this.txType == 'namePreClaimTx' || this.txType == 'nameClaimTx' || this.txType == 'nameUpdateTx') {
@@ -149,7 +153,7 @@ export default {
             return true
         },
         txObject() {
-            return this.props.action.meta.tx
+            return this.unpackedTx.tx
         },
         tx() {
             return this.props.action.params.tx
@@ -160,7 +164,7 @@ export default {
         receiver() {
             if(this.txType == 'spendTx') {
                 return  this.txObject.recipientId
-            }else if(this.data.type == 'contractCall') {
+            }else if(this.txType == 'contractCall') {
                 return  this.txObject.address
             }
 

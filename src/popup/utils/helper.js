@@ -115,12 +115,9 @@ const checkAeppConnected = (host) => {
 const redirectAfterLogin = (ctx) => {
   browser.storage.sync.get('showAeppPopup').then((aepp) => {
     browser.storage.sync.get('pendingTransaction').then((pendingTx) => {
-        console.log(process.env.RUNNING_IN_POPUP )
         if(process.env.RUNNING_IN_POPUP ) {
             browser.storage.sync.remove('showAeppPopup').then(() => {
                 ctx.$store.commit('SET_AEPP_POPUP',true)
-                console.log(window.name)
-                console.log("here")
                 if(window.hasOwnProperty("name") && window.name.includes("popup")) {
                     console.log(window.props.type)
                     if(window.props.type == "connectConfirm") {
@@ -129,7 +126,6 @@ const redirectAfterLogin = (ctx) => {
                         ctx.$router.push('/popup-sign-tx');
                     }
                 }
-
                 // if(aepp.showAeppPopup.type == 'connectConfirm') {
                 //     aepp.showAeppPopup.data.popup = true
                 //     ctx.$router.push({'name':'connect-confirm', params: {
@@ -151,7 +147,7 @@ const redirectAfterLogin = (ctx) => {
                 //         data:aepp.showAeppPopup.data
                 //     }})
                 // }
-            return;
+                return;
             });
         }else if(pendingTx.hasOwnProperty('pendingTransaction') && pendingTx.pendingTransaction.hasOwnProperty('list') && Object.keys(pendingTx.pendingTransaction.list).length > 0) {
             ctx.$store.commit('SET_AEPP_POPUP',true)
